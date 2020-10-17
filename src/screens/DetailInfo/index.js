@@ -1,17 +1,18 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import { loadDrivers, setTotalItems } from "../../redux/DriverReducer";
 import {SafeAreaView, View, FlatList, TouchableOpacity ,Text, StyleSheet, Linking, ActivityIndicator} from 'react-native';
-import {LoadMore} from '../../components/loadMore';
 
 export const DetailInfo = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const driver = route.params.driver;
-  navigation.setOptions({
-    headerTitle: `${driver.givenName} ${driver.familyName}`
-  });
+
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerTitle: `${driver.givenName} ${driver.familyName}`
+    });
+  },[])
 
   return(
     <SafeAreaView style={styles.container}>

@@ -1,48 +1,43 @@
 import React from 'react';
-import {fetchDrivers} from '../../api/Request';
 import {useNavigation} from '@react-navigation/native';
 import { useSelector, useDispatch } from 'react-redux';
-import { loadDrivers, setTotalItems } from "../../redux/DriverReducer";
-import {SafeAreaView, View, FlatList, TouchableOpacity ,Text, StyleSheet, Linking, ActivityIndicator} from 'react-native';
-import {LoadMore} from '../../components/loadMore';
+import { fetchDrivers } from "../../redux/DriverReducer";
+import {
+  SafeAreaView,
+  View,
+  FlatList,
+  Text,
+  StyleSheet,
+  ToastAndroid,
+  TouchableOpacity,
+  ActivityIndicator
+} from 'react-native';
 
 export const HomeView = () => {
   const navigation = useNavigation();
-  // small crutch
-  navigation.setOptions({
-    headerTransparent: true,
-    headerTitle: ''
-  });
   const dispatch = useDispatch()
+
   const arrDrivers = useSelector(state => state.driverReducer.driverList);
-  const [isLoading, setLoading] = React.useState(false)
+  const totalDrivers = useSelector(state => state.driverReducer.totalDrivers);
+  const isLoading = useSelector(state => state.driverReducer.loading);
+  const isError = useSelector(state => state.driverReducer.error);
+
+  const checkEndArray = parseInt(totalDrivers) > arrDrivers.length
 
   React.useEffect(() => {
-    fetchData()
+    // small crutch
+    navigation.setOptions({
+      headerTransparent: true,
+      headerTitle: ''
+    });
+    dispatch(fetchDrivers())
   },[])
-
-  const fetchData = () => {
-    setLoading(true)
-    fetchDrivers()
-    .then((response) => {
-      if(response.status === 200){
-        console.log(response)
-        dispatch(setTotalItems(response.data.MRData.total || 0));
-        dispatch(loadDrivers(response.data.MRData.DriverTable.Drivers));
-        setLoading(false);
-      }
-    })
-    .catch((error) => {
-      console.log(error);
-      setLoading(false);
-    })
-  }
 
   return(
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={arrDrivers}     
-        onEndReachedThreshold={5}
+        data={arrDrivers}
+        onEndReachedThreshold={2}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({item, index}) => {
           return (
@@ -72,7 +67,20 @@ export const HomeView = () => {
           );
         }}
         ListFooterComponent={() => {
-          return <LoadMore isLoading={isLoading} fetchData={fetchData} />
+          return <>
+            {checkEndArray && 
+              <TouchableOpacity
+                disabled={isLoading}
+                onPress={() => dispatch(fetchDrivers())}
+                style={[styles.footer,{backgroundColor: !!isError ? '#ff0008' : '#007bff'}]}
+              >
+                {isLoading
+                  ? <ActivityIndicator color="#ffffff"/> 
+                  : <Text style={styles.btn}>{`${!!isError ? isError : 'Load More'}`}</Text>
+                }
+            </TouchableOpacity>
+            }
+          </>
         }}
       />
     </SafeAreaView>
@@ -110,8 +118,12 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#eaeaea',
+    backgroundColor: '#007bff',
     textAlign: 'center',
     paddingVertical: 20
+  },
+  btn: {
+    color: '#ffffff',
+    textTransform: 'uppercase'
   }
 });
